@@ -2,6 +2,7 @@ use libc::_exit;
 use nix::errno::Errno;
 use nix::sys::signal::*;
 use nix::sys::wait::*;
+#[cfg(not(target_os = "fuchsia"))]
 use nix::unistd::ForkResult::*;
 use nix::unistd::*;
 

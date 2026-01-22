@@ -1,4 +1,6 @@
-use libc::{_exit, mode_t, off_t};
+#[cfg(not(target_os = "fuchsia"))]
+use libc::_exit;
+use libc::{mode_t, off_t};
 use nix::errno::Errno;
 #[cfg(not(any(target_os = "redox", target_os = "haiku")))]
 use nix::fcntl::readlink;
@@ -16,7 +18,9 @@ use nix::sys::signal::{
     sigaction, SaFlags, SigAction, SigHandler, SigSet, Signal,
 };
 use nix::sys::stat::{self, Mode, SFlag};
+#[cfg(not(target_os = "fuchsia"))]
 use nix::sys::wait::*;
+#[cfg(not(target_os = "fuchsia"))]
 use nix::unistd::ForkResult::*;
 use nix::unistd::*;
 use std::env;
@@ -37,7 +41,7 @@ use tempfile::{tempdir, tempfile};
 use crate::*;
 
 #[test]
-#[cfg(not(any(target_os = "netbsd")))]
+#[cfg(not(any(target_os = "fuchsia", target_os = "netbsd")))]
 fn test_fork_and_waitpid() {
     let _m = crate::FORK_MTX.lock();
 
@@ -97,6 +101,7 @@ fn test_rfork_and_waitpid() {
 }
 
 #[test]
+#[cfg(not(target_os = "fuchsia"))]
 fn test_wait() {
     // Grab FORK_MTX so wait doesn't reap a different test's child process
     let _m = crate::FORK_MTX.lock();
@@ -441,7 +446,7 @@ cfg_if! {
         execve_test_factory!(test_fexecve, fexecve, &File::open("/bin/sh").unwrap());
     } else if #[cfg(any(solarish, apple_targets, netbsdlike))] {
         execve_test_factory!(test_execve, execve, CString::new("/bin/sh").unwrap().as_c_str());
-        // No fexecve() on ios, macos, NetBSD, OpenBSD.
+        // No fexecve() on fuchsia, ios, macos, NetBSD, OpenBSD.
     }
 }
 

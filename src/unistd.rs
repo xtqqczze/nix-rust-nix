@@ -205,6 +205,7 @@ impl fmt::Display for Pid {
 /// When `fork` is called, the process continues execution in the parent process
 /// and in the new child.  This return type can be examined to determine whether
 /// you are now executing in the parent process or in the child.
+#[cfg(not(target_os = "fuchsia"))]
 #[derive(Clone, Copy, Debug)]
 pub enum ForkResult {
     /// This is the parent process of the fork.
@@ -216,6 +217,7 @@ pub enum ForkResult {
     Child,
 }
 
+#[cfg(not(target_os = "fuchsia"))]
 impl ForkResult {
     /// Return `true` if this is the child process of the `fork()`
     #[inline]
@@ -274,6 +276,7 @@ impl ForkResult {
 /// special care must be taken to only invoke code you can control and audit.
 ///
 /// [async-signal-safe]: https://man7.org/linux/man-pages/man7/signal-safety.7.html
+#[cfg(not(target_os = "fuchsia"))]
 #[inline]
 pub unsafe fn fork() -> Result<ForkResult> {
     use self::ForkResult::*;
@@ -1093,6 +1096,7 @@ fn to_exec_array<S: AsRef<CStr>>(args: &[S]) -> Vec<*const c_char> {
 /// See the `::nix::unistd::execve` system call for additional details.  `execv`
 /// performs the same action but does not allow for customization of the
 /// environment for the new process.
+#[cfg(not(target_os = "fuchsia"))]
 #[inline]
 pub fn execv<S: AsRef<CStr>>(path: &CStr, argv: &[S]) -> Result<Infallible> {
     let args_p = to_exec_array(argv);
@@ -1114,6 +1118,7 @@ pub fn execv<S: AsRef<CStr>>(path: &CStr, argv: &[S]) -> Result<Infallible> {
 /// of `::std::ffi::CString`s for `args` and `env` (for `execve`). Each element
 /// in the `args` list is an argument to the new process. Each element in the
 /// `env` list should be a string in the form "key=value".
+#[cfg(not(target_os = "fuchsia"))]
 #[inline]
 pub fn execve<SA: AsRef<CStr>, SE: AsRef<CStr>>(
     path: &CStr,
