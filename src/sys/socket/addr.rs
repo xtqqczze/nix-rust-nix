@@ -130,7 +130,7 @@ pub enum AddressFamily {
     #[cfg(linux_android)]
     Rds = libc::AF_RDS,
     /// IBM SNA
-    #[cfg(not(any(target_os = "haiku", target_os = "redox")))]
+    #[cfg(not(any(target_os = "haiku", target_os = "horizon", target_os = "redox")))]
     Sna = libc::AF_SNA,
     /// Socket interface over IrDA
     #[cfg(linux_android)]
@@ -162,6 +162,7 @@ pub enum AddressFamily {
         target_os = "aix",
         solarish,
         apple_targets,
+        target_os = "horizon",
         target_os = "hurd",
         target_os = "redox",
         target_os = "cygwin",
@@ -179,6 +180,7 @@ pub enum AddressFamily {
         target_os = "aix",
         solarish,
         target_os = "haiku",
+        target_os = "horizon",
         target_os = "hurd",
         target_os = "redox",
         target_os = "cygwin",
@@ -265,7 +267,7 @@ impl AddressFamily {
             libc::AF_NETLINK => Some(AddressFamily::Netlink),
             #[cfg(apple_targets)]
             libc::AF_SYSTEM => Some(AddressFamily::System),
-            #[cfg(not(any(linux_android, target_os = "redox", target_os = "cygwin")))]
+            #[cfg(not(any(linux_android, target_os = "redox", target_os = "cygwin", target_os = "horizon")))]
             libc::PF_ROUTE => Some(AddressFamily::Route),
             #[cfg(linux_android)]
             libc::AF_PACKET => Some(AddressFamily::Packet),

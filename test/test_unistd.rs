@@ -1,35 +1,50 @@
-use libc::{_exit, mode_t, off_t};
+#[cfg(not(target_os = "horizon"))]
+use libc::_exit;
+use libc::{mode_t, off_t};
 use nix::errno::Errno;
-#[cfg(not(any(target_os = "redox", target_os = "haiku")))]
+#[cfg(not(any(
+    target_os = "haiku",
+    target_os = "horizon",
+    target_os = "redox",
+)))]
 use nix::fcntl::readlink;
+#[cfg(not(target_os = "horizon"))]
 use nix::fcntl::OFlag;
-#[cfg(not(target_os = "redox"))]
+#[cfg(not(any(target_os = "horizon", target_os = "redox")))]
 use nix::fcntl::{self, open};
 #[cfg(not(any(
     target_os = "redox",
     target_os = "fuchsia",
-    target_os = "haiku"
+    target_os = "haiku",
+    target_os = "horizon",
 )))]
 use nix::pty::{grantpt, posix_openpt, ptsname, unlockpt};
-#[cfg(not(target_os = "redox"))]
+#[cfg(not(any(target_os = "horizon", target_os = "redox")))]
 use nix::sys::signal::{
     sigaction, SaFlags, SigAction, SigHandler, SigSet, Signal,
 };
 use nix::sys::stat::{self, Mode, SFlag};
+#[cfg(not(target_os = "horizon"))]
 use nix::sys::wait::*;
+#[cfg(not(target_os = "horizon"))]
 use nix::unistd::ForkResult::*;
 use nix::unistd::*;
 use std::env;
-#[cfg(not(any(target_os = "fuchsia", target_os = "redox")))]
+#[cfg(not(any(
+    target_os = "fuchsia",
+    target_os = "horizon",
+    target_os = "redox"
+)))]
 use std::ffi::CString;
-#[cfg(not(target_os = "redox"))]
+#[cfg(not(any(target_os = "horizon", target_os = "redox")))]
 use std::fs::DirBuilder;
 use std::fs::{self, File};
 use std::io::Write;
 #[cfg(not(any(
     target_os = "fuchsia",
     target_os = "redox",
-    target_os = "haiku"
+    target_os = "haiku",
+    target_os = "horizon",
 )))]
 use std::path::Path;
 use tempfile::{tempdir, tempfile};
@@ -37,7 +52,7 @@ use tempfile::{tempdir, tempfile};
 use crate::*;
 
 #[test]
-#[cfg(not(any(target_os = "netbsd")))]
+#[cfg(not(any(target_os = "horizon", target_os = "netbsd")))]
 fn test_fork_and_waitpid() {
     let _m = crate::FORK_MTX.lock();
 
@@ -99,6 +114,7 @@ fn test_rfork_and_waitpid() {
 #[test]
 // https://github.com/nix-rust/nix/issues/2823
 #[cfg(not(target_env = "musl"))]
+#[cfg(not(target_os = "horizon"))]
 fn test_wait() {
     // Grab FORK_MTX so wait doesn't reap a different test's child process
     let _m = crate::FORK_MTX.lock();
@@ -160,7 +176,8 @@ fn test_mkfifo_directory() {
     apple_targets,
     target_os = "android",
     target_os = "redox",
-    target_os = "haiku"
+    target_os = "haiku",
+    target_os = "horizon",
 )))]
 fn test_mkfifoat_none() {
     use nix::fcntl::AT_FDCWD;
@@ -182,7 +199,8 @@ fn test_mkfifoat_none() {
     apple_targets,
     target_os = "android",
     target_os = "redox",
-    target_os = "haiku"
+    target_os = "haiku",
+    target_os = "horizon",
 )))]
 fn test_mkfifoat() {
     use nix::fcntl;
@@ -204,7 +222,8 @@ fn test_mkfifoat() {
     apple_targets,
     target_os = "android",
     target_os = "redox",
-    target_os = "haiku"
+    target_os = "haiku",
+    target_os = "horizon",
 )))]
 fn test_mkfifoat_directory_none() {
     use nix::fcntl::AT_FDCWD;
@@ -221,7 +240,8 @@ fn test_mkfifoat_directory_none() {
     apple_targets,
     target_os = "android",
     target_os = "redox",
-    target_os = "haiku"
+    target_os = "haiku",
+    target_os = "horizon",
 )))]
 fn test_mkfifoat_directory() {
     // mkfifoat should fail if a directory is given
@@ -281,7 +301,8 @@ mod freebsd {
     apple_targets,
     target_os = "redox",
     target_os = "fuchsia",
-    target_os = "haiku"
+    target_os = "haiku",
+    target_os = "horizon",
 )))]
 fn test_setgroups() {
     // Skip this test when not run as root as `setgroups()` requires root.
@@ -310,6 +331,7 @@ fn test_setgroups() {
     target_os = "redox",
     target_os = "fuchsia",
     target_os = "haiku",
+    target_os = "horizon",
     solarish
 )))]
 fn test_initgroups() {
@@ -344,7 +366,11 @@ fn test_initgroups() {
     setgroups(&old_groups).unwrap();
 }
 
-#[cfg(not(any(target_os = "fuchsia", target_os = "redox")))]
+#[cfg(not(any(
+    target_os = "fuchsia",
+    target_os = "horizon",
+    target_os = "redox",
+)))]
 macro_rules! execve_test_factory (
     ($test_name:ident, $syscall:ident, $exe: expr $(, $pathname:expr, $flags:expr)*) => (
 
@@ -506,6 +532,7 @@ fn test_fchdir() {
 }
 
 #[test]
+#[cfg(not(target_os = "horizon"))]
 fn test_getcwd() {
     // chdir changes the process's cwd
     let _dr = crate::DirRestore::new();
@@ -564,7 +591,7 @@ fn test_fchown() {
 }
 
 #[test]
-#[cfg(not(target_os = "redox"))]
+#[cfg(not(any(target_os = "horizon", target_os = "redox")))]
 fn test_fchownat() {
     use nix::fcntl::AtFlags;
     use nix::fcntl::AT_FDCWD;
@@ -633,7 +660,7 @@ cfg_if! {
                 skip_if_jailed!("test_acct");
             }
         }
-    } else if #[cfg(not(any(target_os = "redox", target_os = "fuchsia", target_os = "haiku")))] {
+    } else if #[cfg(not(any(target_os = "redox", target_os = "fuchsia", target_os = "haiku", target_os = "horizon")))] {
         macro_rules! require_acct{
             () => {
                 skip_if_not_root!("test_acct");
@@ -647,6 +674,7 @@ cfg_if! {
     target_os = "redox",
     target_os = "fuchsia",
     target_os = "haiku",
+    target_os = "horizon",
     target_os = "cygwin"
 )))]
 fn test_acct() {
@@ -675,6 +703,7 @@ fn test_acct() {
 
 #[cfg_attr(target_os = "hurd", ignore)]
 #[test]
+#[cfg(not(target_os = "horizon"))]
 fn test_fpathconf_limited() {
     let f = tempfile().unwrap();
     // PATH_MAX is limited on most platforms, so it makes a good test
@@ -689,6 +718,7 @@ fn test_fpathconf_limited() {
 
 #[cfg_attr(target_os = "hurd", ignore)]
 #[test]
+#[cfg(not(target_os = "horizon"))]
 fn test_pathconf_limited() {
     // PATH_MAX is limited on most platforms, so it makes a good test
     let path_max = pathconf("/", PathconfVar::PATH_MAX);
@@ -825,18 +855,18 @@ fn test_ftruncate() {
 }
 
 // Used in `test_alarm`.
-#[cfg(not(target_os = "redox"))]
+#[cfg(not(any(target_os = "horizon", target_os = "redox")))]
 static mut ALARM_CALLED: bool = false;
 
 // Used in `test_alarm`.
-#[cfg(not(target_os = "redox"))]
+#[cfg(not(any(target_os = "horizon", target_os = "redox")))]
 pub extern "C" fn alarm_signal_handler(raw_signal: libc::c_int) {
     assert_eq!(raw_signal, libc::SIGALRM, "unexpected signal: {raw_signal}");
     unsafe { ALARM_CALLED = true };
 }
 
 #[test]
-#[cfg(not(target_os = "redox"))]
+#[cfg(not(any(target_os = "horizon", target_os = "redox")))]
 fn test_alarm() {
     use std::{
         thread,
@@ -892,7 +922,11 @@ fn test_canceling_alarm() {
 }
 
 #[test]
-#[cfg(not(any(target_os = "redox", target_os = "haiku")))]
+#[cfg(not(any(
+    target_os = "haiku",
+    target_os = "horizon",
+    target_os = "redox",
+)))]
 fn test_symlinkat() {
     use nix::fcntl::AT_FDCWD;
 
@@ -922,7 +956,11 @@ fn test_symlinkat() {
 }
 
 #[test]
-#[cfg(not(any(target_os = "redox", target_os = "haiku")))]
+#[cfg(not(any(
+    target_os = "haiku",
+    target_os = "horizon",
+    target_os = "redox",
+)))]
 fn test_linkat_file() {
     use nix::fcntl::AtFlags;
 
@@ -954,7 +992,11 @@ fn test_linkat_file() {
 }
 
 #[test]
-#[cfg(not(any(target_os = "redox", target_os = "haiku")))]
+#[cfg(not(any(
+    target_os = "haiku",
+    target_os = "horizon",
+    target_os = "redox",
+)))]
 /// This test is the same as [test_linkat_file], but ensures that two different types can be used
 /// as the path arguments.
 fn test_linkat_pathtypes() {
@@ -988,7 +1030,11 @@ fn test_linkat_pathtypes() {
 }
 
 #[test]
-#[cfg(not(any(target_os = "redox", target_os = "haiku")))]
+#[cfg(not(any(
+    target_os = "haiku",
+    target_os = "horizon",
+    target_os = "redox",
+)))]
 fn test_linkat_olddirfd_none() {
     use nix::fcntl::AtFlags;
     use nix::fcntl::AT_FDCWD;
@@ -1028,7 +1074,11 @@ fn test_linkat_olddirfd_none() {
 }
 
 #[test]
-#[cfg(not(any(target_os = "redox", target_os = "haiku")))]
+#[cfg(not(any(
+    target_os = "haiku",
+    target_os = "horizon",
+    target_os = "redox",
+)))]
 fn test_linkat_newdirfd_none() {
     use nix::fcntl::AtFlags;
     use nix::fcntl::AT_FDCWD;
@@ -1068,7 +1118,12 @@ fn test_linkat_newdirfd_none() {
 }
 
 #[test]
-#[cfg(not(any(apple_targets, target_os = "redox", target_os = "haiku")))]
+#[cfg(not(any(
+    apple_targets,
+    target_os = "haiku",
+    target_os = "horizon",
+    target_os = "redox",
+)))]
 fn test_linkat_no_follow_symlink() {
     use nix::fcntl::AtFlags;
     use nix::fcntl::AT_FDCWD;
@@ -1114,7 +1169,11 @@ fn test_linkat_no_follow_symlink() {
 }
 
 #[test]
-#[cfg(not(any(target_os = "redox", target_os = "haiku")))]
+#[cfg(not(any(
+    target_os = "haiku",
+    target_os = "horizon",
+    target_os = "redox",
+)))]
 fn test_linkat_follow_symlink() {
     use nix::fcntl::AtFlags;
     use nix::fcntl::AT_FDCWD;
@@ -1166,7 +1225,7 @@ fn test_linkat_follow_symlink() {
 }
 
 #[test]
-#[cfg(not(target_os = "redox"))]
+#[cfg(not(any(target_os = "horizon", target_os = "redox")))]
 fn test_unlinkat_dir_noremovedir() {
     let tempdir = tempdir().unwrap();
     let dirname = "foo_dir";
@@ -1187,7 +1246,7 @@ fn test_unlinkat_dir_noremovedir() {
 }
 
 #[test]
-#[cfg(not(target_os = "redox"))]
+#[cfg(not(any(target_os = "horizon", target_os = "redox")))]
 fn test_unlinkat_dir_removedir() {
     let tempdir = tempdir().unwrap();
     let dirname = "foo_dir";
@@ -1207,7 +1266,7 @@ fn test_unlinkat_dir_removedir() {
 }
 
 #[test]
-#[cfg(not(target_os = "redox"))]
+#[cfg(not(any(target_os = "horizon", target_os = "redox")))]
 fn test_unlinkat_file() {
     let tempdir = tempdir().unwrap();
     let filename = "foo.txt";
@@ -1227,6 +1286,7 @@ fn test_unlinkat_file() {
 }
 
 #[test]
+#[cfg(not(target_os = "horizon"))]
 fn test_access_not_existing() {
     let tempdir = tempdir().unwrap();
     let dir = tempdir.path().join("does_not_exist.txt");
@@ -1237,6 +1297,7 @@ fn test_access_not_existing() {
 }
 
 #[test]
+#[cfg(not(target_os = "horizon"))]
 fn test_access_file_exists() {
     let tempdir = tempdir().unwrap();
     let path = tempdir.path().join("does_exist.txt");
@@ -1306,7 +1367,8 @@ fn test_setfsuid() {
 #[cfg(not(any(
     target_os = "redox",
     target_os = "fuchsia",
-    target_os = "haiku"
+    target_os = "haiku",
+    target_os = "horizon",
 )))]
 fn test_ttyname() {
     use std::os::fd::AsRawFd;
@@ -1356,7 +1418,7 @@ fn test_getpeereid() {
 }
 
 #[test]
-#[cfg(not(target_os = "redox"))]
+#[cfg(not(any(target_os = "horizon", target_os = "redox")))]
 fn test_faccessat_none_not_existing() {
     use nix::fcntl::AtFlags;
     use nix::fcntl::AT_FDCWD;
@@ -1372,7 +1434,7 @@ fn test_faccessat_none_not_existing() {
 }
 
 #[test]
-#[cfg(not(target_os = "redox"))]
+#[cfg(not(any(target_os = "horizon", target_os = "redox")))]
 fn test_faccessat_not_existing() {
     use nix::fcntl::AtFlags;
 
@@ -1388,7 +1450,7 @@ fn test_faccessat_not_existing() {
 }
 
 #[test]
-#[cfg(not(target_os = "redox"))]
+#[cfg(not(any(target_os = "horizon", target_os = "redox")))]
 fn test_faccessat_none_file_exists() {
     use nix::fcntl::AtFlags;
     use nix::fcntl::AT_FDCWD;
@@ -1406,7 +1468,7 @@ fn test_faccessat_none_file_exists() {
 }
 
 #[test]
-#[cfg(not(target_os = "redox"))]
+#[cfg(not(any(target_os = "horizon", target_os = "redox")))]
 fn test_faccessat_file_exists() {
     use nix::fcntl::AtFlags;
 

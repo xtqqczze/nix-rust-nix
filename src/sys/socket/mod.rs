@@ -94,13 +94,14 @@ pub enum SockType {
     /// based data transmission path for datagrams of fixed
     /// maximum length; a consumer is required to read an
     /// entire packet with each input system call.
+    #[cfg(not(target_os = "horizon"))]
     SeqPacket = libc::SOCK_SEQPACKET,
     /// Provides raw network protocol access.
-    #[cfg(not(target_os = "redox"))]
+    #[cfg(not(any(target_os = "horizon", target_os = "redox")))]
     Raw = libc::SOCK_RAW,
     /// Provides a reliable datagram layer that does not
     /// guarantee ordering.
-    #[cfg(not(any(target_os = "haiku", target_os = "redox")))]
+    #[cfg(not(any(target_os = "haiku", target_os = "horizon", target_os = "redox")))]
     Rdm = libc::SOCK_RDM,
 }
 // The TryFrom impl could've been derived using libc_enum!.  But for
@@ -113,10 +114,11 @@ impl TryFrom<i32> for SockType {
         match x {
             libc::SOCK_STREAM => Ok(Self::Stream),
             libc::SOCK_DGRAM => Ok(Self::Datagram),
+            #[cfg(not(target_os = "horizon"))]
             libc::SOCK_SEQPACKET => Ok(Self::SeqPacket),
-            #[cfg(not(target_os = "redox"))]
+            #[cfg(not(any(target_os = "horizon", target_os = "redox")))]
             libc::SOCK_RAW => Ok(Self::Raw),
-            #[cfg(not(any(target_os = "haiku", target_os = "redox")))]
+            #[cfg(not(any(target_os = "haiku", target_os = "horizon", target_os = "redox")))]
             libc::SOCK_RDM => Ok(Self::Rdm),
             _ => Err(Errno::EINVAL),
         }
@@ -133,6 +135,7 @@ pub enum SockProtocol {
     /// UDP protocol ([ip(7)](https://man7.org/linux/man-pages/man7/ip.7.html))
     Udp = libc::IPPROTO_UDP,
     /// Raw sockets ([raw(7)](https://man7.org/linux/man-pages/man7/raw.7.html))
+    #[cfg(not(target_os = "horizon"))]
     Raw = libc::IPPROTO_RAW,
     /// Allows applications to configure and control a KEXT
     /// ([ref](https://developer.apple.com/library/content/documentation/Darwin/Conceptual/NKEConceptual/control/control.html))
@@ -677,6 +680,7 @@ macro_rules! cmsg_space {
 
 #[inline]
 #[doc(hidden)]
+#[cfg(not(target_os = "horizon"))]
 pub const fn cmsg_space<T>() -> usize {
     // SAFETY: CMSG_SPACE is always safe
     unsafe { libc::CMSG_SPACE(mem::size_of::<T>() as libc::c_uint) as usize }
