@@ -26,6 +26,8 @@ fn test_wait_signal() {
     }
 }
 
+// https://github.com/nix-rust/nix/issues/2823
+#[cfg(not(target_env = "musl"))]
 #[test]
 #[cfg(any(
     target_os = "android",
@@ -73,6 +75,8 @@ fn test_wait_exit() {
     }
 }
 
+// https://github.com/nix-rust/nix/issues/2823
+#[cfg(not(target_env = "musl"))]
 #[cfg(not(target_os = "haiku"))]
 #[test]
 #[cfg(any(
@@ -202,6 +206,8 @@ mod ptrace {
     }
 
     #[cfg(not(target_env = "uclibc"))]
+    // https://github.com/nix-rust/nix/issues/2823
+    #[cfg(not(target_env = "musl"))]
     fn ptrace_waitid_parent(child: Pid) {
         // Wait for the raised SIGTRAP
         //
@@ -254,6 +260,8 @@ mod ptrace {
     }
 
     #[test]
+    // https://github.com/nix-rust/nix/issues/2823
+    #[cfg(not(target_env = "musl"))]
     #[cfg(not(target_env = "uclibc"))]
     fn test_waitid_ptrace() {
         require_capability!("test_waitid_ptrace", CAP_SYS_PTRACE);

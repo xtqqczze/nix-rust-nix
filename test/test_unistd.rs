@@ -97,6 +97,8 @@ fn test_rfork_and_waitpid() {
 }
 
 #[test]
+// https://github.com/nix-rust/nix/issues/2823
+#[cfg(not(target_env = "musl"))]
 fn test_wait() {
     // Grab FORK_MTX so wait doesn't reap a different test's child process
     let _m = crate::FORK_MTX.lock();
