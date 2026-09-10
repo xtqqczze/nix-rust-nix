@@ -130,7 +130,6 @@ feature! {
     pub mod signalfd;
 }
 
-#[cfg(not(target_os = "horizon"))]
 feature! {
     #![feature = "socket"]
     #[allow(missing_docs)]
