@@ -110,3 +110,4 @@ path = "test/sys/test_prctl.rs"
 
 [patch.crates-io]
 libc = { git = "https://github.com/rust-lang/libc", branch = "libc-0.2" }
+rustix = { git = "https://github.com/xtqqczze/bytecodealliance-rustix", branch = "horizon" }
