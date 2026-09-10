@@ -1,25 +1,15 @@
 use std::fs::File;
-// https://github.com/nix-rust/nix/issues/2823
-#[cfg(not(target_env = "musl"))]
-use std::io::stdout;
-use std::io::{Read, Write};
+use std::io::{stdout, Read, Write};
 use std::os::unix::prelude::*;
 use std::path::Path;
 
-// https://github.com/nix-rust/nix/issues/2823
-#[cfg(not(target_env = "musl"))]
 use libc::_exit;
 use nix::fcntl::{open, OFlag};
 use nix::pty::*;
 use nix::sys::stat;
 use nix::sys::termios::*;
-// https://github.com/nix-rust/nix/issues/2823
-#[cfg(not(target_env = "musl"))]
 use nix::sys::wait::WaitStatus;
-// https://github.com/nix-rust/nix/issues/2823
-#[cfg(not(target_env = "musl"))]
-use nix::unistd::pause;
-use nix::unistd::write;
+use nix::unistd::{pause, write};
 
 /// Test equivalence of `ptsname` and `ptsname_r`
 #[test]
@@ -260,8 +250,6 @@ fn test_openpty_with_termios() {
 }
 
 #[test]
-// https://github.com/nix-rust/nix/issues/2823
-#[cfg(not(target_env = "musl"))]
 fn test_forkpty() {
     use nix::sys::signal::*;
     use nix::sys::wait::wait;
